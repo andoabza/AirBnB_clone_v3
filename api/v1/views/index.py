@@ -1,7 +1,8 @@
 #!/usr/bin/python3
+from flask import jsonify
 from api.v1.views import app_views
 
-app_views.route('/status')
+@app_views.route('/status', methods=['GET'])
 def status():
-    my = {"Status": "Ok"}
-    return my
+    """ a route to the statue"""
+    return jsonify({'status': 'OK'})
