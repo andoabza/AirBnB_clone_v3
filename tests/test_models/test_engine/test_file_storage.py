@@ -113,3 +113,75 @@ class TestFileStorage(unittest.TestCase):
         with open("file.json", "r") as f:
             js = f.read()
         self.assertEqual(json.loads(string), json.loads(js))
+   class TestDBStorage(unittest.TestCase):
+    def setUp(self):
+        # Set up DBStorage for testing
+        self.db_storage = DBStorage()
+
+    def tearDown(self):
+        # Clean up after each test
+        self.db_storage.reset()
+
+    def test_get_existing_object(self):
+        # Test get() method with an existing object
+        obj_id = "example_id"
+        expected_object = {"id": obj_id, "name": "Example Object"}
+        self.db_storage.new(expected_object)
+        self.assertEqual(self.db_storage.get("ExampleClass", obj_id), expected_object)
+
+    def test_get_non_existing_object(self):
+        # Test get() method with a non-existing object
+        obj_id = "non_existing_id"
+        self.assertIsNone(self.db_storage.get("ExampleClass", obj_id))
+
+    def test_count_all_objects(self):
+        # Test count() method for all objects
+        expected_count = 5
+        for i in range(expected_count):
+            self.db_storage.new({"id": f"obj_{i}", "name": f"Object {i}"})
+        self.assertEqual(self.db_storage.count(), expected_count)
+
+    def test_count_objects_of_class(self):
+        # Test count() method for objects of a specific class
+        class_name = "ExampleClass"
+        expected_count = 3
+        for i in range(expected_count):
+            self.db_storage.new({"id": f"obj_{i}", "name": f"Object {i}", "__class__": class_name})
+        self.assertEqual(self.db_storage.count(class_name), expected_count)
+
+    class TestFileStorage(unittest.TestCase):
+    def setUp(self):
+        # Set up FileStorage for testing
+        self.file_storage = FileStorage()
+
+    def tearDown(self):
+        # Clean up after each test
+        self.file_storage.reset()
+
+    def test_get_existing_object(self):
+        # Test get() method with an existing object
+        obj_id = "example_id"
+        expected_object = {"id": obj_id, "name": "Example Object"}
+        self.file_storage.new(expected_object)
+        self.assertEqual(self.file_storage.get("ExampleClass", obj_id), expected_object)
+
+    def test_get_non_existing_object(self):
+        # Test get() method with a non-existing object
+        obj_id = "non_existing_id"
+        self.assertIsNone(self.file_storage.get("ExampleClass", obj_id))
+
+    def test_count_all_objects(self):
+        # Test count() method for all objects
+        expected_count = 5
+        for i in range(expected_count):
+            self.file_storage.new({"id": f"obj_{i}", "name": f"Object {i}"})
+        self.assertEqual(self.file_storage.count(), expected_count)
+
+    def test_count_objects_of_class(self):
+        # Test count() method for objects of a specific classS
+        class_name = "ExampleClass"
+        expected_count = 3
+        for i in range(expected_count):
+            self.file_storage.new({"id": f"obj_{i}", "name": f"Object {i}", "__class__": class_name})
+        self.assertEqual(self.file_storage.count(class_name), expected_count)
+
