@@ -83,6 +83,7 @@ class DBStorage:
     def count(self, cls=None):
         """ return count of objects"""
         if cls:
-            return "{} objects: {}".format(cls, len([obj for obj in self.__objects.values() if type(obj) == cls]))
+            return "{} objects: {}".format(cls, len(
+                [obj for obj in self.__objects.values() if type(obj) == cls]))
         else:
             return "All objects: ".format(len(self.__objects))
