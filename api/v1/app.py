@@ -6,18 +6,19 @@ from models import storage
 from api.v1.views import app_views
 
 
-HOST = getenv('HBNB_API_HOST')
-PORT = getenv('HBNB_API_PORT')
 app = Flask(__name__)
-app.register_blueprint(app_views, url_prefix='/api/v1')
+app.register_blueprint(app_views)
 
 
 @app.teardown_appcontext
-def tear(exception):
+def tear(error):
     storage.close()
 
 
 if __name__ == "__main__":
+    """ getenv for main app"""
+    HOST = getenv('HBNB_API_HOST')
+    PORT = getenv('HBNB_API_PORT')
     if HOST and PORT:
         app.run(host=HOST, port=PORT, threaded=True)
     else:
