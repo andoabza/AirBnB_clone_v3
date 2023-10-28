@@ -17,9 +17,10 @@ def tear(error):
 
 if __name__ == "__main__":
     """ getenv for main app"""
-    HOST = getenv('HBNB_API_HOST')
-    PORT = getenv('HBNB_API_PORT')
-    if HOST and PORT:
-        app.run(host=HOST, port=PORT, threaded=True)
-    else:
-        app.run(host='0.0.0.0', port='5000', threaded=True)
+    host = getenv('HBNB_API_HOST')
+    port = getenv('HBNB_API_PORT')
+    if not host:
+        host = '0.0.0.0'
+    if not port:
+        port = '5000'
+    app.run(host=host, port=port, threaded=True)
