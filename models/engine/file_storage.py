@@ -78,7 +78,7 @@ class FileStorage:
         Returns:
             Object requested. None if not found.
         """
-        return self.all(cls).get(cls + '.' + id)
+        return self.all(cls).get(cls.__name__ + '.' + id)
 
     def count(self, cls=None):
         """get number of objects matching given class name
