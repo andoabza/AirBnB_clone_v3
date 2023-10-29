@@ -25,7 +25,7 @@ def id_for_state(state_id):
     defines the states/<state_id> route
     Returns: state id or 404 Error if object not linked to State object
     """
-    a_state = storage.get("State", state_id)
+    a_state = storage.get(State, state_id)
     if a_state:
         return jsonify(a_state.to_dict())
     return abort(404)
@@ -39,7 +39,7 @@ def delete_state_id(state_id):
     Returns: if successful 200 and an empty dictionary
              404 if state_id is not linked to any State obj
     """
-    state = storage.get("State", state_id)
+    state = storage.get(State, state_id)
     if state:
         storage.delete(state)
         storage.save()
@@ -82,7 +82,7 @@ def state_update(state_id):
     if not state_data:
         return abort(400, 'Not a JSON')
 
-    state = storage.get("State", state_id)
+    state = storage.get(State, state_id)
 
     if not state:
         return abort(404)
