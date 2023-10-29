@@ -4,7 +4,8 @@
 from models import storage
 from api.v1.views import app_views
 from flask import jsonify, abort, request, make_response
-
+from models.city import City
+from models.state import State
 
 @app_views.route("/states/<state_id>/cities",
                  strict_slashes=False, methods=['GET'])
@@ -12,7 +13,7 @@ def cities_of_state(state_id):
     """Returns list of json representation of all cities linked to the given state
     Raises 404 if no state found based on state_id
     """
-    state = storage.get("State", state_id)
+    state = storage.get(State, state_id)
     if state:
         return jsonify([c.to_dict() for c in state.cities])
     abort(404)
@@ -24,7 +25,7 @@ def create_city(state_id):
     """create a city linked to state specified by state_id
     """
     from models.city import City
-    state = storage.get("State", state_id)
+    state = storage.get(State, state_id)
     if state:
         body = request.get_json()
         if not body:
@@ -43,7 +44,7 @@ def create_city(state_id):
 def get_city(city_id):
     """Returns json representation of a city
     """
-    city = storage.get("City", city_id)
+    city = storage.get(City, city_id)
     if city:
         return jsonify(city.to_dict())
     abort(404)
@@ -54,7 +55,7 @@ def get_city(city_id):
 def delete_city(city_id):
     """delete a city object from storage
     """
-    city = storage.get("City", city_id)
+    city = storage.get(City, city_id)
     if city:
         storage.delete(city)
         storage.save()
@@ -68,7 +69,7 @@ def modify_city(city_id):
     """modify a city object
     """
     ignore = ["id", "state_id", "created_at", "updated_at"]
-    city = storage.get("City", city_id)
+    city = storage.get(City, city_id)
     if city:
         body = request.get_json()
         if not body:
