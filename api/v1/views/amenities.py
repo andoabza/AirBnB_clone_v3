@@ -65,8 +65,8 @@ def put_new(a_id):
 
         for key, value in amenity.items():
         if key not in ['id', 'created_at', 'updated_at']:
-            setattr(state, key, value)
-        amenity.update()
+            setattr(amen, key, value)
+    
         storage.save()
-        return jsonify(amenity.to_dict()), 200
+        return jsonify(amen.to_dict()), 200
     return abort(404)
