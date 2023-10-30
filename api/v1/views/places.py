@@ -4,6 +4,7 @@ module that defines API interactions for Places __objects
 """
 from models import storage
 from models.place import Place
+from models.city import City
 from api.v1.views import app_views
 from flask import jsonify, abort, request, make_response
 
@@ -15,7 +16,7 @@ def get_places(city_id):
     defines the places route
     Returns: list of all Place objects associated with a City obj
     """
-    city = storage.get("City", city_id)
+    city = storage.get(City, city_id)
     if city:
         return jsonify([place.to_dict() for place in city.places])
     abort(404)
@@ -28,7 +29,7 @@ def id_for_place(place_id):
     defines the places/<place_id> route
     Returns: place id or 404 Error if object not linked to Place object
     """
-    a_place = storage.get("Place", place_id)
+    a_place = storage.get(Place, place_id)
     if a_place:
         return jsonify(a_place.to_dict())
     abort(404)
@@ -42,7 +43,7 @@ def delete_place_id(place_id):
     Returns: if successful 200 and an empty dictionary
              404 if place_id is not linked to any Place obj
     """
-    place = storage.get("Place", place_id)
+    place = storage.get(Place, place_id)
     if place:
         storage.delete(place)
         storage.save()
@@ -58,7 +59,7 @@ def create_place(city_id):
     Returns: 201 on successful creation
              400 "Not a JSON" if HTTP body request is not valid
     """
-    city = storage.get("City", city_id)
+    city = storage.get(City, city_id)
     if not city:
         abort(404)
     body = request.get_json()
@@ -66,7 +67,7 @@ def create_place(city_id):
         return make_response('Not a JSON', 400)
     if not body.get("user_id"):
         return make_response('Missing user_id', 400)
-    user = storage.get("User", body.get("user_id"))
+    user = storage.get(User, body.get("user_id"))
     if not user:
         abort(404)
     if not body.get("name"):
@@ -90,7 +91,7 @@ def place_update(place_id):
              400 "Not a JSON" if HTTP body request is not valid
              404 if state_id is not linked to any Place object
     """
-    place = storage.get("Place", place_id)
+    place = storage.get(Place, place_id)
     if not place:
         abort(404)
     body = request.get_json()
