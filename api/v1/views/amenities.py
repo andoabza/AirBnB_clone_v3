@@ -53,8 +53,8 @@ def create_amenity():
 @app_views.route('/amenities/a_id', strict_slashes=False, methods=['PUT'])
 def put_new(a_id):
     """amenity with given id"""
-    amenity = storage.get(Amenity, a_id)
-    if amenity:
+    amen = storage.get(Amenity, a_id)
+    if amen:
         try:
             amenity = request.get_json()
 
@@ -63,8 +63,10 @@ def put_new(a_id):
         except Exception as e:
             return abort(400, 'Not a JSON')
 
-        new_amen = Amenity(**amenity)
-        new_amen.update()
+        for key, value in amenity.items():
+        if key not in ['id', 'created_at', 'updated_at']:
+            setattr(state, key, value)
+        amenity.update()
         storage.save()
-        return jsonify(new_amen.to_dict()), 200
+        return jsonify(amenity.to_dict()), 200
     return abort(404)
