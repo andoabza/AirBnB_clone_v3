@@ -60,7 +60,7 @@ def create_state():
 
         if states.get("name") is None:
             return abort(400, 'Missing name')
-    except:
+    except Exception as e:
         return abort(400, 'Not a JSON')
 
     new_state = State(**states)
