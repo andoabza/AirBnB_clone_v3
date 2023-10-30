@@ -1,78 +1,60 @@
 #!/usr/bin/python3
-"""Renders json view for User object(s)
 """
-from models import storage
+    Flask route that returns json response
+"""
 from api.v1.views import app_views
-from flask import jsonify, abort, request, make_response
+from flask import abort, jsonify, request
+from models import storage, CNC
+from flasgger.utils import swag_from
 
 
-@app_views.route("/users",
-                 strict_slashes=False, methods=['GET'])
-def all_users():
-    """Returns list of json representation of all users
+@app_views.route('/users/', methods=['GET', 'POST'])
+@swag_from('swagger_yaml/users_no_id.yml', methods=['GET', 'POST'])
+def users_no_id(user_id=None):
     """
-    users = storage.all("User")
-    return jsonify([user.to_dict() for user in users.values()])
-
-
-@app_views.route("/users/<user_id>",
-                 strict_slashes=False, methods=['GET'])
-def get_user(user_id):
-    """Returns a user
-    Raises 404 if no user found based on user_id
+        users route that handles http requests with no ID given
     """
-    user = storage.get("User", user_id)
-    if user:
-        return jsonify(user.to_dict())
-    abort(404)
+
+    if request.method == 'GET':
+        all_users = storage.all('User')
+        all_users = [obj.to_json() for obj in all_users.values()]
+        return jsonify(all_users)
+
+    if request.method == 'POST':
+        req_json = request.get_json()
+        if req_json is None:
+            abort(400, 'Not a JSON')
+        if req_json.get('email') is None:
+            abort(400, 'Missing email')
+        if req_json.get('password') is None:
+            abort(400, 'Missing password')
+        User = CNC.get('User')
+        new_object = User(**req_json)
+        new_object.save()
+        return jsonify(new_object.to_json()), 201
 
 
-@app_views.route("/users/<user_id>",
-                 strict_slashes=False, methods=['DELETE'])
-def delete_user(user_id):
-    """delete an user object from storage
+@app_views.route('/users/<user_id>', methods=['GET', 'DELETE', 'PUT'])
+@swag_from('swagger_yaml/users_id.yml', methods=['GET', 'DELETE', 'PUT'])
+def user_with_id(user_id=None):
     """
-    user = storage.get("User", user_id)
-    if user:
-        storage.delete(user)
-        storage.save()
-        return jsonify({})
-    abort(404)
-
-
-@app_views.route("/users/<user_id>",
-                 strict_slashes=False, methods=['PUT'])
-def modify_user(user_id):
-    """modify an user object
+        users route that handles http requests with ID given
     """
-    ignore = ["id", "email", "created_at", "updated_at"]
-    user = storage.get("User", user_id)
-    if user:
-        body = request.get_json()
-        if not body:
-            return make_response('Not a JSON', 400)
-        for k, v in body.items():
-            if k not in ignore:
-                setattr(user, k, v)
-        storage.save()
-        return make_response(jsonify(user.to_dict()), 200)
-    abort(404)
+    user_obj = storage.get('User', user_id)
+    if user_obj is None:
+        abort(404, 'Not found')
 
+    if request.method == 'GET':
+        return jsonify(user_obj.to_json())
 
-@app_views.route("/users",
-                 strict_slashes=False, methods=['POST'])
-def create_user():
-    """create a user
-    """
-    from models.user import User
-    body = request.get_json()
-    if not body:
-        return make_response('Not a JSON', 400)
-    if not body.get('email'):
-        return make_response('Missing email', 400)
-    if not body.get('password'):
-        return make_response('Missing password', 400)
-    user = User(email=body.get('email'), password=body.get('password'))
-    storage.new(user)
-    storage.save()
-    return make_response(jsonify(user.to_dict()), 201)
+    if request.method == 'DELETE':
+        user_obj.delete()
+        del user_obj
+        return jsonify({}), 200
+
+    if request.method == 'PUT':
+        req_json = request.get_json()
+        if req_json is None:
+            abort(400, 'Not a JSON')
+        user_obj.bm_update(req_json)
+        return jsonify(user_obj.to_json()), 200

@@ -1,96 +1,57 @@
 #!/usr/bin/python3
 """
-module that defines API interactions for Amenity __objects
+    Flask route that returns json respone
 """
-from models import storage
-from models.amenity import Amenity
 from api.v1.views import app_views
-from flask import jsonify, abort, request
+from flask import abort, jsonify, request
+from models import storage, CNC
+from flasgger.utils import swag_from
 
 
-@app_views.route('/amenities', strict_slashes=False, methods=['GET'])
-def get_amenities():
+@app_views.route('/amenities/', methods=['GET', 'POST'])
+@swag_from('swagger_yaml/amenities_no_id.yml', methods=['GET', 'POST'])
+def amenities_no_id(amenity_id=None):
     """
-    defines the amenities route
-    Returns: list of all amenity objects
+        amenities route that handles http requests no ID given
     """
-    amenities = storage.all("Amenity").values()
+    if request.method == 'GET':
+        all_amenities = storage.all('Amenity')
+        all_amenities = [obj.to_json() for obj in all_amenities.values()]
+        return jsonify(all_amenities)
 
-    return jsonify([amenity.to_dict() for amenity in amenities])
-
-
-@app_views.route('/amenities/<amenity_id>',
-                 strict_slashes=False, methods=["GET"])
-def id_for_amenity(amenity_id):
-    """
-    defines the amenities/<amenity_id> route
-    Returns: amenity id or 404 Error if object not linked to Amenity object
-    """
-    an_amenity = storage.get("Amenity", amenity_id)
-    if an_amenity:
-        return jsonify(an_amenity.to_dict())
-    return abort(404)
+    if request.method == 'POST':
+        req_json = request.get_json()
+        if req_json is None:
+            abort(400, 'Not a JSON')
+        if req_json.get('name') is None:
+            abort(400, 'Missing name')
+        Amenity = CNC.get('Amenity')
+        new_object = Amenity(**req_json)
+        new_object.save()
+        return jsonify(new_object.to_json()), 201
 
 
-@app_views.route('/amenities/<amenity_id>', strict_slashes=False,
-                 methods=['DELETE'])
-def delete_amenity_id(amenity_id):
+@app_views.route('/amenities/<amenity_id>', methods=['GET', 'DELETE', 'PUT'])
+@swag_from('swagger_yaml/amenities_id.yml', methods=['GET', 'DELETE', 'PUT'])
+def amenities_with_id(amenity_id=None):
     """
-    defines Delete for amenity objects by id
-    Returns: if successful 200 and an empty dictionary
-             404 if amenity_id is not linked to any Amenity obj
+        amenities route that handles http requests with ID given
     """
-    amenity = storage.get("Amenity", amenity_id)
-    if amenity:
-        storage.delete(amenity)
-        storage.save()
+    amenity_obj = storage.get('Amenity', amenity_id)
+    if amenity_obj is None:
+        abort(404, 'Not found')
+
+    if request.method == 'GET':
+        return jsonify(amenity_obj.to_json())
+
+    if request.method == 'DELETE':
+        amenity_obj.delete()
+        del amenity_obj
         return jsonify({}), 200
-    return abort(404)
 
-
-@app_views.route('/amenities', strict_slashes=False, methods=['POST'])
-def create_amenity():
-    """
-    define how to create a new amenity object
-    Returns: 201 on successful creation
-             400 "Not a JSON" if HTTP body request is not valid
-    """
-    try:
-        amenities = request.get_json()
-
-        if amenities.get("name") is None:
-            return abort(400, 'Missing name')
-    except:
-        return abort(400, 'Not a JSON')
-
-    new_amenity = Amenity(name=amenities.get("name"))
-    storage.new(new_amenity)
-    storage.save()
-    return jsonify(new_amenity.to_dict()), 201
-
-
-@app_views.route('/amenities/<amenity_id>',
-                 strict_slashes=False, methods=['PUT'])
-def amenity_update(amenity_id):
-    """
-    defines how an Update to a state is made
-    Returns: 200 and the state object if successful
-             400 "Not a JSON" if HTTP body request is not valid
-             404 if state_id is not linked to any State object
-    """
-    amenity_data = request.get_json()
-
-    if not amenity_data:
-        return abort(400, 'Not a JSON')
-
-    amenity = storage.get("Amenity", amenity_id)
-
-    if not amenity:
-        return abort(404)
-
-    for key, value in amenity_data.items():
-        if key not in ['id', 'created_at', 'updated_at']:
-            setattr(amenity, key, value)
-    storage.save()
-
-    return jsonify(amenity.to_dict()), 200
+    if request.method == 'PUT':
+        req_json = request.get_json()
+        if req_json is None:
+            abort(400, 'Not a JSON')
+        amenity_obj.bm_update(req_json)
+        return jsonify(amenity_obj.to_json()), 200
